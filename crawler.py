@@ -9,7 +9,8 @@ import re
 import os
 import simplejson as json
 
-html_dict = {} #Dict to keep record of urls
+html_dict = {} #Dict to keep record of scrapped urls 
+url_dict = {}  #Dict to keep record of total urls
 threads = []   #List of threads 
 
 
@@ -27,9 +28,9 @@ def filter_links(link):
     if domain_pattern.match(str(link[2])) \
             and len(html_dict.keys()) <= MAX_URLS:         
         new_link = domain_pattern.match(link[2]).group(0)
-        if new_link in html_dict.keys():
+        if new_link in url_dict.keys():
             return False
-        html_dict[new_link] = '' #Insert link in dict to avoid 
+        url_dict[new_link] = '' #Insert link in dict to avoid 
                                  #duplicates of of urls
         return True
 
@@ -93,7 +94,7 @@ def url_parser():
         for response in responses:
             if response and len(html_dict.keys()) <= MAX_URLS:
                 html_queue.put(response.content)
-                if response.url in html_dict.keys():
+                if response.url in url_dict.keys():
                     print response.url, response.status_code
                     html_dict[response.url] = response.content
 
