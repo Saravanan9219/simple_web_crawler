@@ -26,7 +26,7 @@ def coroutine(func):
 def filter_links(link):
     """Filter links based on domain and filter out already crawled links"""
     if domain_pattern.match(str(link[2])) \
-            and len(html_dict.keys()) <= MAX_URLS:         
+            and len(html_dict.keys()) < MAX_URLS:         
         new_link = domain_pattern.match(link[2]).group(0)
         if new_link in url_dict.keys():
             return False
@@ -56,7 +56,7 @@ def html_parser():
         links = filter(filter_links, document.iterlinks())
         url_queue.put([link[2] for link in links if link[0].tag == 'a' \
                           and link[2] != 'javascript:;'\
-                          and len(html_dict.keys()) <= MAX_URLS])
+                          and len(html_dict.keys()) < MAX_URLS])
         while True:
             try:
                 url_routine.send('start thread')
@@ -92,7 +92,7 @@ def url_parser():
         requests = (grequests.get(url) for url in urls)
         responses = grequests.map(requests)
         for response in responses:
-            if response and len(html_dict.keys()) <= MAX_URLS:
+            if response and len(html_dict.keys()) < MAX_URLS:
                 html_queue.put(response.content)
                 if response.url in url_dict.keys():
                     print response.url, response.status_code
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     html_q, html_routine = html_parser()
     url_routine.send([html_q, html_routine])
     html_routine.send([url_q, url_routine])
-    html_dict[domain] = ''
+    url_dict[domain] = ''
     url_q.put([domain])
     url_routine.send('start thread')
     for thread in threads:
