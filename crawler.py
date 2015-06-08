@@ -24,7 +24,8 @@ def coroutine(func):
 
 def filter_links(link):
     """Filter links based on domain and filter out already crawled links"""
-    if domain_pattern.match(str(link[2])):         
+    if domain_pattern.match(str(link[2])) \
+            and len(html_dict.keys()) <= MAX_URLS:         
         new_link = domain_pattern.match(link[2]).group(0)
         if new_link in html_dict.keys():
             return False
@@ -53,7 +54,8 @@ def html_parser():
         document.make_links_absolute(domain)
         links = filter(filter_links, document.iterlinks())
         url_queue.put([link[2] for link in links if link[0].tag == 'a' \
-                          and link[2] != 'javascript:;'])
+                          and link[2] != 'javascript:;'\
+                          and len(html_dict.keys()) <= MAX_URLS])
         while True:
             try:
                 url_routine.send('start thread')
@@ -89,7 +91,7 @@ def url_parser():
         requests = (grequests.get(url) for url in urls)
         responses = grequests.map(requests)
         for response in responses:
-            if response:
+            if response and len(html_dict.keys()) <= MAX_URLS:
                 html_queue.put(response.content)
                 if response.url in html_dict.keys():
                     print response.url, response.status_code
@@ -101,6 +103,7 @@ def url_parser():
 
                     with open('html_files/' + filename, 'wb') as file:
                         file.write(response.content)
+
         while True:
             try:
                 html_routine.send('start thread')
@@ -134,6 +137,8 @@ def handler(signum, frame):
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, handler)
     domain = raw_input('Enter the url: (eg: http://chennaipy.org)\n')
+    MAX_URLS = raw_input('Enter the number of urls to be crawled (eg: 5)\n')
+    MAX_URLS = int(MAX_URLS)
     domain_pattern = re.compile(r'^' + domain + '(?:/[^\.#]*)*(?:.html)?$')
     if not os.path.exists('html_files'):
         os.mkdir('html_files')
