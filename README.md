@@ -1,6 +1,10 @@
 # simple_web_crawler
 A Simple Web crawler based on lxml and grequests
 
+Dependencies are included in file dependencies
+Using pip install dependencies
+     pip install -r dependencies
+
 Example Usage:
 python crawler.py
 
